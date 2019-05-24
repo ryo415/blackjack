@@ -64,7 +64,7 @@ func Print_Deck(deck []card) {
 
 func Print_Card(print_card card, secret int) {
 	if secret == 0 {
-		fmt.Printf("%vの%v\n", print_card.mark, print_card.num)
+		fmt.Printf("%vの%v\n", print_card.mark, NumToCard(print_card.num))
 	}else{
 		fmt.Printf("****\n")
 	}
