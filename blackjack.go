@@ -94,10 +94,10 @@ func Delete_Card(deck []card, delete_card card) []card {
 	return result_deck
 }
 
-func Drow_Phase(deck []card, point int, turn string, secret int) ([]card, int) {
+func Drow_Phase(deck []card, cards []card, turn string, secret int) ([]card, []card) {
 	var drow_card = Drow_Card(deck)
 	deck = Delete_Card(deck, drow_card)
-	point += NumToPoint(drow_card.num)
+	cards = Add_Have_Card(cards, drow_card)
 
 	if turn == "player" {
 		fmt.Print("あなた: ")
@@ -106,64 +106,68 @@ func Drow_Phase(deck []card, point int, turn string, secret int) ([]card, int) {
 	}
 	Print_Card(drow_card, secret)
 
-	return deck, point
+	return deck, cards
 }
 
-func Initialize_game(deck []card, user_point int, cpu_point int) ([]card, int, int) {
+func Initialize_game(deck []card, user_cards []card, cpu_cards []card) ([]card, []card, []card) {
 	var turn string = "player"
 
 	fmt.Println("---ブラックジャック---")
 	fmt.Println("ゲーム開始")
 
-	deck, user_point = Drow_Phase(deck, user_point, turn, 0)
-	deck, user_point = Drow_Phase(deck, user_point, turn, 0)
+	deck, user_cards = Drow_Phase(deck, user_cards, turn, 0)
+	deck, user_cards = Drow_Phase(deck, user_cards, turn, 0)
 
 	turn = "croupier"
-	deck, cpu_point = Drow_Phase(deck, cpu_point, turn, 0)
-	deck, cpu_point = Drow_Phase(deck, cpu_point, turn, 1)
+	deck, cpu_cards = Drow_Phase(deck, cpu_cards, turn, 0)
+	deck, cpu_cards = Drow_Phase(deck, cpu_cards, turn, 1)
 
-	return deck, user_point, cpu_point
+	return deck, user_cards, cpu_cards
 
 }
 
-func Player_Turn(deck []card, user_point int) ([]card, int) {
+func Player_Turn(deck []card, user_cards []card) ([]card, []card, bool) {
 	var cont string
 	var turn string = "player"
+	var burst_flag bool
 
 	for {
-		fmt.Printf("あなたの現在の得点は%v\n", user_point)
+		fmt.Printf("あなたの現在の得点は%v\n", Print_Point(user_cards))
 		fmt.Println("カードを引きますか? Y/N")
 		fmt.Scan(&cont)
 
 		if cont == "Y" || cont == "y"{
-			deck, user_point = Drow_Phase(deck, user_point, turn, 0)
-			if user_point > 21 {
+			deck, user_cards = Drow_Phase(deck, user_cards, turn, 0)
+			if Print_Point(user_cards) > 21 {
 				fmt.Println("バーストしました")
-				user_point = -1
-				return deck, user_point
+				burst_flag = true
+				return deck, user_cards, burst_flag
 			}
 		} else if cont == "N" || cont == "n" {
-			return deck, user_point
+			return deck, user_cards, burst_flag
 		} else {
 			fmt.Println("YかNを入力")
 		}
 	}
 }
 
-func Croupier_Turn(deck []card, cpu_point int) ([]card, int) {
-	var turn string = "croupir"
+func Croupier_Turn(deck []card, cpu_cards []card) ([]card, []card) {
+	var turn string = "croupier"
 
 	for {
-		fmt.Printf("ディーラーの現在の得点は%v\n", cpu_point)
-		if cpu_point < 17 {
-			deck, cpu_point = Drow_Phase(deck, cpu_point, turn, 0)
+		fmt.Printf("ディーラーの現在の得点は%v\n", Print_Point(cpu_cards))
+		if Print_Point(cpu_cards) < 17 {
+			deck, cpu_cards = Drow_Phase(deck, cpu_cards, turn, 0)
 		} else {
-			return deck, cpu_point
+			return deck, cpu_cards
 		}
 	}
 }
 
-func Print_Result(user_point, cpu_point int) {
+func Print_Result(user_cards, cpu_cards []card) {
+	user_point := Print_Point(user_cards)
+	cpu_point := Print_Point(cpu_cards)
+
 	if user_point > cpu_point || cpu_point > 21 {
 		fmt.Println("あなたの勝ち")
 	} else if user_point == cpu_point {
@@ -173,22 +177,47 @@ func Print_Result(user_point, cpu_point int) {
 	}
 }
 
+func Add_Have_Card(cards []card, add_card card)  []card {
+	cards = append(cards, add_card)
+
+	return cards
+}
+
+func Print_Point(cards []card) int {
+	var point int
+	var ace_flag bool
+	for i:=0;i<len(cards);i++ {
+		point += NumToPoint(cards[i].num)
+		if cards[i].num == 1 {
+			ace_flag = true
+		}
+	}
+
+	if ace_flag == true && point+10 < 21 {
+		point += 10
+	}
+
+	return point
+}
+
 func main() {
-	var cpu_point int = 0
-	var user_point int = 0
+	var user_cards []card
+	var cpu_cards []card
 	var deck = Initialize_Deck()
+	var burst_flag bool
 
-	deck, user_point, cpu_point = Initialize_game(deck, user_point, cpu_point)
+	deck, user_cards, cpu_cards = Initialize_game(deck, user_cards, cpu_cards)
 
-	deck, user_point = Player_Turn(deck, user_point)
-	if user_point < 0 {
+	deck, user_cards, burst_flag = Player_Turn(deck, user_cards)
+
+	if burst_flag == true {
 
 	} else {
-		deck, cpu_point = Croupier_Turn(deck, cpu_point)
+		deck, cpu_cards = Croupier_Turn(deck, cpu_cards)
 
-		fmt.Printf("あなたのポイント: %v\n", user_point)
-		fmt.Printf("ディーラーのポイント: %v\n", cpu_point)
-		Print_Result(user_point, cpu_point)
+		fmt.Printf("あなたのポイント: %v\n", Print_Point(user_cards))
+		fmt.Printf("ディーラーのポイント: %v\n", Print_Point(cpu_cards))
+		Print_Result(user_cards, cpu_cards)
 	}
 
 }
