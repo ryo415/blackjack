@@ -38,6 +38,22 @@ func NumToPoint(num int) int {
 	}
 }
 
+func Print_Mark(mark_string string) string {
+	switch mark_string {
+	case "ハート":
+		return "💛"
+	case "スペード":
+		return "♠"
+	case "ダイヤ":
+		return "♦"
+	case "クラブ":
+		return "♣"
+	}
+
+	return "Error"
+}
+
+
 func Initialize_Deck() []card {
 	marks := []string{"ハート", "スペード", "ダイヤ", "クラブ"}
 	var deck []card
@@ -64,7 +80,7 @@ func Print_Deck(deck []card) {
 
 func Print_Card(print_card card, secret int) {
 	if secret == 0 {
-		fmt.Printf("%vの%v\n", print_card.mark, NumToCard(print_card.num))
+		fmt.Printf("%v %v\n", Print_Mark(print_card.mark), NumToCard(print_card.num))
 	}else{
 		fmt.Printf("****\n")
 	}
